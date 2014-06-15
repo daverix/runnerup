@@ -16,16 +16,16 @@
  */
 package org.runnerup.workout.feedback;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.AudioManager;
 import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 @TargetApi(Build.VERSION_CODES.FROYO)
 public class RUTextToSpeech {
@@ -181,6 +181,7 @@ public class RUTextToSpeech {
 class UtteranceCompletion {
 
 	@SuppressWarnings("deprecation")
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
 	public static void setUtteranceCompletedListener(
 			TextToSpeech tts, final RUTextToSpeech ruTextToSpeech) {
 		if (Build.VERSION.SDK_INT < 15) {
@@ -192,7 +193,7 @@ class UtteranceCompletion {
 				}
 			});
 		} else {
-			tts.setOnUtteranceProgressListener(new UtteranceProgressListener(){
+            tts.setOnUtteranceProgressListener(new UtteranceProgressListener(){
 				@Override
 				public void onDone(String utteranceId) {
 					ruTextToSpeech.utteranceCompleted(utteranceId);

@@ -80,10 +80,6 @@
 		    android:screenOrientation="portrait" >
 		</activity>
 		
-		<activity android:name=".view.SaveActivity"
-		    android:screenOrientation="portrait" >
-		</activity>
-
 		<activity android:name=".view.SettingsActivity"
 		    android:screenOrientation="portrait" >
 		</activity>

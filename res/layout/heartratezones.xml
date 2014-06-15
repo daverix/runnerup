@@ -19,7 +19,7 @@
     android:id="@+id/linear1xxLayout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res/org.runnerup">
+    android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <org.runnerup.widget.TitleSpinner
         android:id="@+id/hrzAge"

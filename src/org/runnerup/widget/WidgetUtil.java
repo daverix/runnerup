@@ -16,8 +16,6 @@
  */
 package org.runnerup.widget;
 
-import org.runnerup.R;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
@@ -28,6 +26,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import org.runnerup.R;
 
 @TargetApi(Build.VERSION_CODES.FROYO)
 public class WidgetUtil {
@@ -60,6 +60,7 @@ public class WidgetUtil {
     }
 	
 	@SuppressWarnings("deprecation")
+    @TargetApi(16)
 	public static void setBackground(View v, Drawable d) {
 		if (Build.VERSION.SDK_INT < 16) {
 			v.setBackgroundDrawable(d);
