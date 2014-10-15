@@ -17,16 +17,28 @@
 
 package org.runnerup.view;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.text.DateFormat;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.WeakHashMap;
+import android.annotation.TargetApi;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.runnerup.R;
 import org.runnerup.db.DBHelper;
@@ -40,31 +52,19 @@ import org.runnerup.util.Constants;
 import org.runnerup.util.Constants.DB.FEED;
 import org.runnerup.util.Formatter;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import java.io.InputStream;
+import java.net.URL;
+import java.text.DateFormat;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.WeakHashMap;
 
 @TargetApi(Build.VERSION_CODES.FROYO)
-public class FeedActivity extends Activity implements Constants {
+public class FeedFragment extends Fragment implements Constants {
 
     DBHelper mDBHelper = null;
     UploadManager uploadManager = null;
@@ -84,20 +84,25 @@ public class FeedActivity extends Activity implements Constants {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.feed);
-
-        mDBHelper = new DBHelper(this);
-        uploadManager = new UploadManager(this);
-        formatter = new Formatter(this);
+        
+        mDBHelper = new DBHelper(getActivity());
+        uploadManager = new UploadManager(getActivity());
+        formatter = new Formatter(getActivity());
         feed = new FeedList(mDBHelper);
         feed.load(); // load from DB
 
-        feedAdapter = new FeedListAdapter(this, feed);
-        feedList = (ListView) findViewById(R.id.feed_list);
+        feedAdapter = new FeedListAdapter(getActivity(), feed);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.feed, container, false);
+
+        feedList = (ListView) view.findViewById(R.id.feed_list);
         feedList.setAdapter(feedAdapter);
         feedList.setDividerHeight(2);
 
-        refreshButton = (Button) findViewById(R.id.refresh_feed_button);
+        refreshButton = (Button) view.findViewById(R.id.refresh_feed_button);
         refreshButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -110,18 +115,26 @@ public class FeedActivity extends Activity implements Constants {
             }
         });
 
-        feedAccountButton = (Button) findViewById(R.id.feed_account_button);
+        feedAccountButton = (Button) view.findViewById(R.id.feed_account_button);
         feedAccountButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(FeedActivity.this,
+                Intent i = new Intent(getActivity(),
                         AccountListActivity.class);
                 startActivityForResult(i, 0);
             }
         });
 
-        feedHeader = (LinearLayout) findViewById(R.id.feed_header);
-        feedStatus = (TextView) findViewById(R.id.feed_status);
+        feedHeader = (LinearLayout) view.findViewById(R.id.feed_header);
+        feedStatus = (TextView) view.findViewById(R.id.feed_status);
+        
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
         startSync();
     }
 
@@ -180,7 +193,7 @@ public class FeedActivity extends Activity implements Constants {
     };
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
     }
 
@@ -193,7 +206,7 @@ public class FeedActivity extends Activity implements Constants {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         startSync();
     }
 

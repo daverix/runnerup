@@ -267,7 +267,16 @@
 		
 		<org.runnerup.widget.AboutPreference
         	android:title="@string/Google_Play_Services_Legal_Notices"
-        	android:dialogMessage="Not much to say at this point" /> 
+        	android:dialogMessage="Not much to say at this point" />
+
+        <Preference
+            android:key="whats_new"
+            android:title="What's new"
+            android:summary="Show the latest changes in the app">
+            <intent
+                android:targetPackage="org.runnerup"
+                android:targetClass="org.runnerup.view.AccountListActivity" />
+        </Preference>
 	</PreferenceCategory>
 	
 </PreferenceScreen>

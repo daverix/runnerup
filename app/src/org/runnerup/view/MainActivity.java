@@ -17,9 +17,23 @@
 
 package org.runnerup.view;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import android.annotation.TargetApi;
+import android.content.ContentValues;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.AssetManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 
 import org.runnerup.R;
 import org.runnerup.db.DBHelper;
@@ -27,35 +41,108 @@ import org.runnerup.util.Constants.DB;
 import org.runnerup.util.FileUtil;
 import org.runnerup.util.Formatter;
 
-import android.annotation.TargetApi;
-import android.app.AlertDialog;
-import android.app.Service;
-import android.app.TabActivity;
-import android.content.ContentValues;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.AssetManager;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.webkit.WebView;
-import android.widget.TabHost;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.FROYO)
-public class MainLayout extends TabActivity {
+public class MainActivity extends ActionBarActivity implements ActionBar.TabListener, ViewPager.OnPageChangeListener {
+    private ViewPager pager;
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.main);
+
+        pager = (ViewPager) findViewById(R.id.pager);
+
+        List<FragmentPage> pages = new ArrayList<FragmentPage>();
+        pages.add(new FragmentPage("START", "start", new FragmentFactory() {
+            @Override
+            public Fragment build() {
+                return new StartFragment();
+            }
+        }));
+        pages.add(new FragmentPage("FEED", "feed", new FragmentFactory() {
+            @Override
+            public Fragment build() {
+                return new FeedFragment();
+            }
+        }));
+        pages.add(new FragmentPage("HISTORY", "history", new FragmentFactory() {
+            @Override
+            public Fragment build() {
+                return new HistoryFragment();
+            }
+        }));
+        pages.add(new FragmentPage("SETTINGS", "settings", new FragmentFactory() {
+            @Override
+            public Fragment build() {
+                return new SettingsFragment();
+            }
+        }));
+        pager.setAdapter(new FragmentAdapter(getSupportFragmentManager(), pages));
+        pager.setOnPageChangeListener(this);
+
+        int currentTab = savedInstanceState != null ? savedInstanceState.getInt("currentTab") : 0;
+
+        getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        addTabs(pages, currentTab);
+
+        setPreferences();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt("currentTab", pager.getCurrentItem());
+    }
+
+    private void addTabs(List<FragmentPage> pages, int currentTab) {
+        ActionBar ab = getSupportActionBar();
+        int i=0;
+        for(FragmentPage page : pages) {
+            ab.addTab(ab.newTab()
+                    .setText(page.getTitle())
+                    .setTag(page.getTag())
+                    .setTabListener(this), currentTab == i++);
+        }
+    }
+
+    @Override
+    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+        pager.setCurrentItem(tab.getPosition());
+    }
+
+    @Override
+    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+
+    }
+
+    @Override
+    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        getSupportActionBar().setSelectedNavigationItem(position);
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
 
     private Drawable getDrawable(int resId) {
         Drawable d = getResources().getDrawable(resId);
@@ -63,13 +150,10 @@ public class MainLayout extends TabActivity {
     }
 
     private enum UpgradeState {
-        UNKNOWN, NEW, UPGRADE, DOWNGRADE, SAME
+        UNKNOWN, NEW, UPGRADE, DOWNGRADE, SAME;
     }
 
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-
+    private void setPreferences() {
         int versionCode = 0;
         UpgradeState upgradeState = UpgradeState.UNKNOWN;
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -99,6 +183,8 @@ public class MainLayout extends TabActivity {
         }
         editor.commit();
 
+
+
         // clear basicTargetType between application startup/shutdown
         pref.edit().remove("basicTargetType").commit();
 
@@ -108,35 +194,11 @@ public class MainLayout extends TabActivity {
         PreferenceManager.setDefaultValues(this, R.layout.settings, false);
         PreferenceManager.setDefaultValues(this, R.layout.audio_cue_settings, true);
 
-        TabHost tabHost = getTabHost(); // The activity TabHost
-
-        tabHost.addTab(tabHost.newTabSpec("Start")
-                .setIndicator("Start", getDrawable(R.drawable.ic_tab_main))
-                .setContent(new Intent(this, StartActivity.class)));
-
-        tabHost.addTab(tabHost.newTabSpec("Feed")
-                .setIndicator("Feed", getDrawable(R.drawable.ic_tab_feed))
-                .setContent(new Intent(this, FeedActivity.class)));
-
-        tabHost.addTab(tabHost.newTabSpec("History")
-                .setIndicator("History", getDrawable(R.drawable.ic_tab_history))
-                .setContent(new Intent(this, HistoryActivity.class)));
-
-        tabHost.addTab(tabHost.newTabSpec("Settings")
-                .setIndicator("Settings", getDrawable(R.drawable.ic_tab_setup))
-                .setContent(new Intent(this, SettingsActivity.class)));
-
-        // Set tabs Colors
-        tabHost.setBackgroundColor(Color.BLACK);
-        tabHost.getTabWidget().setBackgroundColor(Color.BLACK);
-        tabHost.setCurrentTab(0);
+        handleBundled(getApplicationContext().getAssets(), "bundled", getFilesDir().getPath()+ "/..");
 
         if (upgradeState == UpgradeState.UPGRADE) {
             whatsNew();
         }
-
-        handleBundled(getApplicationContext().getAssets(), "bundled", getFilesDir().getPath()
-                + "/..");
     }
 
     void handleBundled(AssetManager mgr, String src, String dst) {
@@ -222,74 +284,8 @@ public class MainLayout extends TabActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Intent i = null;
-        switch (item.getItemId()) {
-            case R.id.menu_accounts:
-                i = new Intent(this, AccountListActivity.class);
-                break;
-            case R.id.menu_workouts:
-                i = new Intent(this, ManageWorkoutsActivity.class);
-                break;
-            case R.id.menu_audio_cues:
-                i = new Intent(this, AudioCueSettingsActivity.class);
-                break;
-            case R.id.menu_settings:
-                getTabHost().setCurrentTab(3);
-                return true;
-            case R.id.menu_rate:
-                onRateClick.onClick(null);
-                break;
-            case R.id.menu_whatsnew:
-                whatsNew();
-                break;
-        }
-        if (i != null) {
-            startActivity(i);
-        }
-        return true;
-    }
-
-    public OnClickListener onRateClick = new OnClickListener() {
-        @Override
-        public void onClick(View arg0) {
-            try {
-                Uri uri = Uri.parse("market://details?id=" + getPackageName());
-                startActivity(new Intent(Intent.ACTION_VIEW, uri));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    };
-
     public void whatsNew() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Service.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.whatsnew, null);
-        WebView wv = (WebView) view.findViewById(R.id.web_view1);
-        builder.setTitle("What's new");
-        builder.setView(view);
-        builder.setPositiveButton("Rate RunnerUp", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                onRateClick.onClick(null);
-            }
-
-        });
-        builder.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        builder.show();
-        wv.loadUrl("file:///android_asset/changes.html");
+        WhatsNewFragment dialog = new WhatsNewFragment();
+        dialog.show(getSupportFragmentManager(), "whatsnewdialog");
     }
 }

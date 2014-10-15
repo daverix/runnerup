@@ -17,47 +17,54 @@
 
 package org.runnerup.view;
 
-import java.io.IOException;
-
-import org.runnerup.R;
-import org.runnerup.util.FileUtil;
-
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
-public class SettingsActivity extends PreferenceActivity {
+import com.github.machinarius.preferencefragment.PreferenceFragment;
+
+import org.runnerup.R;
+import org.runnerup.util.FileUtil;
+
+import java.io.IOException;
+
+public class SettingsFragment extends PreferenceFragment {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         addPreferencesFromResource(R.layout.settings);
-        setContentView(R.layout.settings_wrapper);
 
         {
-            Preference btn = (Preference) findPreference("exportdb");
+            Preference btn = findPreference("exportdb");
             btn.setOnPreferenceClickListener(onExportClick);
         }
         {
-            Preference btn = (Preference) findPreference("importdb");
+            Preference btn = findPreference("importdb");
             btn.setOnPreferenceClickListener(onImportClick);
         }
 
-        if (!hasHR(this)) {
+        Preference whatsnew = findPreference("whats_new");
+        whatsnew.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                WhatsNewFragment whatsNewFragment = new WhatsNewFragment();
+                whatsNewFragment.show(getFragmentManager(), "whatsnewdialog");
+                return true;
+            }
+        });
+
+        if (!hasHR(getActivity())) {
             Preference pref = findPreference("cue_configure_hrzones");
             getPreferenceScreen().removePreference(pref);
         }
-
     }
 
     public static boolean hasHR(Context ctx) {
@@ -71,7 +78,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     private String getDbFile() {
-        String from = getFilesDir().getPath() + "/../databases/runnerup.db";
+        String from = getActivity().getFilesDir().getPath() + "/../databases/runnerup.db";
         return from;
     }
 
@@ -79,7 +86,7 @@ public class SettingsActivity extends PreferenceActivity {
 
         @Override
         public boolean onPreferenceClick(Preference preference) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             String dstdir = Environment.getExternalStorageDirectory().getPath();
             builder.setTitle("Export runnerup.db to " + dstdir);
             DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
@@ -108,7 +115,7 @@ public class SettingsActivity extends PreferenceActivity {
 
         @Override
         public boolean onPreferenceClick(Preference preference) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             String srcdir = Environment.getExternalStorageDirectory().getPath();
             builder.setTitle("Import runnerup.db from " + srcdir);
             DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
