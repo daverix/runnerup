@@ -18,7 +18,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
 
     <RelativeLayout
         android:id="@+id/history_row0"
@@ -31,8 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:text=""
-            android:textSize="20dp"
+            android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="bold" />
 
         <TextView
@@ -41,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:text="@string/history_list_sport_txt"
-            android:textSize="20dp"
+            android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="bold" />
 
     </RelativeLayout>
@@ -58,7 +59,7 @@
             android:layout_weight="1"
             android:gravity="right"
             android:text="@string/history_list_time_txt"
-            android:textSize="20dp" />
+            android:textAppearance="?android:textAppearanceMedium" />
 
         <TextView
             android:id="@+id/history_list_distance"
@@ -67,7 +68,7 @@
             android:layout_weight="1"
             android:gravity="right"
             android:text="@string/history_list_distance_txt"
-            android:textSize="20dp" />
+            android:textAppearance="?android:textAppearanceMedium" />
 
         <TextView
             android:id="@+id/history_list_pace"
@@ -76,14 +77,14 @@
             android:layout_weight="1"
             android:gravity="right"
             android:text="@string/history_list_pace_txt"
-            android:textSize="20dp" />
+            android:textAppearance="?android:textAppearanceMedium" />
 
         <TextView
             android:id="@+id/history_list_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/history_list_id_txt"
-            android:textSize="20dp"
+            android:textAppearance="?android:textAppearanceMedium"
             android:visibility="gone" />
     </LinearLayout>
 

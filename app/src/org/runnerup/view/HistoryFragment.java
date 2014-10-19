@@ -17,12 +17,10 @@
 
 package org.runnerup.view;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -42,7 +40,6 @@ import org.runnerup.util.Constants;
 import org.runnerup.util.Formatter;
 import org.runnerup.util.SimpleCursorLoader;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
 public class HistoryFragment extends Fragment implements Constants, OnItemClickListener,
         LoaderCallbacks<Cursor> {
 
@@ -69,7 +66,6 @@ public class HistoryFragment extends Fragment implements Constants, OnItemClickL
         View view = inflater.inflate(R.layout.history, container, false);
 
         listView = (ListView) view.findViewById(R.id.history_list);
-        listView.setDividerHeight(2);
         listView.setOnItemClickListener(this);
         cursorAdapter = new HistoryListAdapter(getActivity(), null);
         listView.setAdapter(cursorAdapter);

@@ -24,23 +24,29 @@
     <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:id="@+id/radiogroup">
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Basic" />
+            android:text="Basic"
+            android:id="@+id/radio_basic" />
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Interval" />
+            android:text="Interval"
+            android:id="@+id/radio_interval" />
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Advanced" />
+            android:text="Advanced"
+            android:id="@+id/radio_advanced" />
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Manual" />
+            android:text="Manual"
+            android:id="@+id/radio_manual" />
     </RadioGroup>
 
     <FrameLayout

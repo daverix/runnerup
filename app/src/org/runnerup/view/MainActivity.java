@@ -25,15 +25,16 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 
 import org.runnerup.R;
 import org.runnerup.db.DBHelper;
@@ -93,6 +94,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         addTabs(pages, currentTab);
 
+
         setPreferences();
     }
 
@@ -142,11 +144,6 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     @Override
     public void onPageScrollStateChanged(int state) {
 
-    }
-
-    private Drawable getDrawable(int resId) {
-        Drawable d = getResources().getDrawable(resId);
-        return d;
     }
 
     private enum UpgradeState {

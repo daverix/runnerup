@@ -17,7 +17,6 @@
 
 package org.runnerup.view;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -31,7 +30,6 @@ import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.media.AudioManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -44,6 +42,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.RadioGroup;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TextView;
 
@@ -64,7 +63,6 @@ import org.runnerup.workout.WorkoutBuilder;
 
 import java.util.HashMap;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
 public class StartFragment extends Fragment implements TickListener, GpsInformation {
     final static String TAB_BASIC = "basic";
     final static String TAB_INTERVAL = "interval";
@@ -84,6 +82,7 @@ public class StartFragment extends Fragment implements TickListener, GpsInformat
     ImageButton hrButton = null;
     TextView hrValueText = null;
     FrameLayout hrLayout = null;
+    RadioGroup radioGroup = null;
 
     DBHelper mDBHelper = null;
     private SQLiteDatabase mDB = null;
@@ -166,24 +165,53 @@ public class StartFragment extends Fragment implements TickListener, GpsInformat
         hrValueText = (TextView) view.findViewById(R.id.hr_value_text);
         hrLayout = (FrameLayout) view.findViewById(R.id.hr_layout);
 
-
-
-
-
-
-
-
+        radioGroup = (RadioGroup) view.findViewById(R.id.radiogroup);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                showFragment(checkedId);
+            }
+        });
 
         Intent intent = getActivityIntent();
-        if(intent != null && intent.hasExtra("mode") && intent.getStringExtra("mode").equals(TAB_ADVANCED)) {
-            showFragment(TAB_ADVANCED);
+        if(savedInstanceState != null) {
+            int checkedId = savedInstanceState.getInt("checkedId", R.id.radio_basic);
+            radioGroup.check(checkedId);
+        }
+        else if (intent != null && intent.hasExtra("mode") && intent.getStringExtra("mode").equals(TAB_ADVANCED)) {
             intent.removeExtra("mode");
+            radioGroup.check(R.id.radio_advanced);
         }
         else {
-            showFragment(TAB_BASIC);
+            radioGroup.check(R.id.radio_basic);
         }
-
+        
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt("checkedId", radioGroup.getCheckedRadioButtonId());
+    }
+
+    private void showFragment(int checkedId) {
+        switch (checkedId) {
+            case R.id.radio_basic:
+                showFragment(TAB_BASIC);
+                break;
+            case R.id.radio_interval:
+                showFragment(TAB_INTERVAL);
+                break;
+            case R.id.radio_advanced:
+                showFragment(TAB_ADVANCED);
+                break;
+            case R.id.radio_manual:
+                showFragment(TAB_MANUAL);
+                break;
+
+        }
     }
 
     private Intent getActivityIntent() {
@@ -195,11 +223,6 @@ public class StartFragment extends Fragment implements TickListener, GpsInformat
     }
 
     private void showFragment(String tag) {
-        Fragment currentFragment = getChildFragmentManager().findFragmentById(R.id.run_settings);
-        Fragment fragment = getChildFragmentManager().findFragmentByTag(tag);
-        if(currentFragment != null && currentFragment == fragment)
-            return;
-
         FragmentFactory factory = fragmentFactories.get(tag);
         if(factory == null)
             throw new IllegalStateException("no factory for tag " + tag);
@@ -253,8 +276,7 @@ public class StartFragment extends Fragment implements TickListener, GpsInformat
         ComponentName mMediaReceiverCompName = new ComponentName(
                 getActivity().getPackageName(), HeadsetButtonReceiver.class.getName());
         AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
-        mAudioManager
-                .registerMediaButtonEventReceiver(mMediaReceiverCompName);
+        mAudioManager.registerMediaButtonEventReceiver(mMediaReceiverCompName);
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.setPriority(2147483647);
@@ -266,8 +288,7 @@ public class StartFragment extends Fragment implements TickListener, GpsInformat
         ComponentName mMediaReceiverCompName = new ComponentName(
                 getActivity().getPackageName(), HeadsetButtonReceiver.class.getName());
         AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
-        mAudioManager
-                .unregisterMediaButtonEventReceiver(mMediaReceiverCompName);
+        mAudioManager.unregisterMediaButtonEventReceiver(mMediaReceiverCompName);
         try {
             getActivity().unregisterReceiver(catchButtonEvent);
         } catch (IllegalArgumentException e) {
@@ -376,7 +397,7 @@ public class StartFragment extends Fragment implements TickListener, GpsInformat
 
                 SharedPreferences audioPref = settingsFragment.getAudioPreferences(pref);
                 Workout w = settingsFragment.getWorkout(pref);
-                
+
                 skipStopGps = true;
                 WorkoutBuilder.prepareWorkout(getResources(), pref, w,
                         TAB_BASIC.contentEquals(getCurrentTabTag()));
