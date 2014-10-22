@@ -19,14 +19,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
     <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="16dp"
-        android:id="@+id/radiogroup">
+        android:id="@+id/radiogroup"
+        android:padding="16dp">
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -54,78 +53,4 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:id="@+id/run_settings" />
-
-    <RelativeLayout
-        android:id="@+id/gpsinfo"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_above="@+id/start_buttons" >
-
-	<TextView
-        android:id="@+id/gps_info_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/gps_info_text_txt" />
-	
-	<TextView
-        android:id="@+id/gps_info1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/gps_info_text"
-        android:text="@string/gps_info1_txt" />
-
-    <TextView
-        android:id="@+id/gps_info2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/gps_info1"
-        android:text="@string/gps_info1_txt" />
-    <TextView
-        android:id="@+id/hr_info"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/gps_info2"
-        android:gravity="center"
-        android:text="" />
-    </RelativeLayout>
-    
-    <LinearLayout
-        android:id="@+id/start_buttons"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        >
-   	<Button
-        android:id="@+id/start_button"
-        style="@style/ButtonText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/btn_green"
-        android:enabled="true"
-        android:text="@string/start_button_btn"
-        android:layout_weight="0.8" />
-   	
-   	<FrameLayout
-   	    android:id="@+id/hr_layout"
-   	    android:layout_width="0dp"
-   	    android:layout_weight="0.15"
-   	    android:layout_height="match_parent" >
-
-            <ImageButton
-                android:id="@+id/hr_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/heart" />
-
-            <TextView
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_gravity="center"
-                android:id="@+id/hr_value_text" />
-        </FrameLayout>
-	</LinearLayout>
 </LinearLayout>

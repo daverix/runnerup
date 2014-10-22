@@ -2,17 +2,22 @@ package org.runnerup.view;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import org.runnerup.R;
+import org.runnerup.view.list.CheckboxOneLineViewModel;
+import org.runnerup.view.list.ListViewModel;
+import org.runnerup.view.list.ListViewModelFragment;
+import org.runnerup.view.list.TwoLineViewModel;
 import org.runnerup.widget.TitleSpinner;
 import org.runnerup.workout.Workout;
 import org.runnerup.workout.WorkoutBuilder;
 
-public class IntervalSettingsFragment extends Fragment implements StartSettingsFragment {
+import java.util.ArrayList;
+import java.util.List;
+
+public class IntervalSettingsFragment extends ListViewModelFragment implements StartSettings {
     TitleSpinner intervalType = null;
     TitleSpinner intervalTime = null;
     TitleSpinner intervalDistance = null;
@@ -21,15 +26,16 @@ public class IntervalSettingsFragment extends Fragment implements StartSettingsF
     TitleSpinner intervalRestDistance = null;
     TitleSpinner intervalAudioSpinner = null;
     AudioSchemeListAdapter intervalAudioListAdapter = null;
-    StartFragment startFragment;
+    DatabaseProvider databaseProvider;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startFragment = (StartFragment) getParentFragment();
+        //databaseProvider = (DatabaseProvider) getParentFragment();
     }
 
+    /*
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.start_interval, container, false);
@@ -45,19 +51,34 @@ public class IntervalSettingsFragment extends Fragment implements StartSettingsF
         intervalRestTime.setOnSetValueListener(onSetTimeValidator);
         intervalRestDistance = (TitleSpinner) view.findViewById(R.id.interval_rest_distance);
         intervalRestType.setOnSetValueListener(intervalRestTypeSetValue);
-        intervalAudioListAdapter = new AudioSchemeListAdapter(startFragment.getDB(), inflater, false);
+        intervalAudioListAdapter = new AudioSchemeListAdapter(databaseProvider.getDB(), inflater, false);
         intervalAudioListAdapter.reload();
         intervalAudioSpinner = (TitleSpinner) view.findViewById(R.id.interval_audio_cue_spinner);
         intervalAudioSpinner.setAdapter(intervalAudioListAdapter);
 
         return view;
     }
+    */
+
+    @Override
+    protected List<ListViewModel> onCreateListItems(LayoutInflater inflater) {
+        List<ListViewModel> items = new ArrayList<ListViewModel>();
+        items.add(new TwoLineViewModel(inflater, 1, true, "Audio cue settings", "Default"));
+        items.add(new TwoLineViewModel(inflater, 2, true, "Interval type", "Time"));
+        items.add(new TwoLineViewModel(inflater, 3, true, "Interval time (HH:MM:SS)", "00:01:00"));
+        items.add(new TwoLineViewModel(inflater, 4, true, "Rest type", "Distance"));
+        items.add(new TwoLineViewModel(inflater, 5, true, "Rest distance (m)", "100"));
+        items.add(new TwoLineViewModel(inflater, 6, true, "Repetitions", "10"));
+        items.add(new CheckboxOneLineViewModel(inflater, 7, true, "Warmup", true));
+        items.add(new CheckboxOneLineViewModel(inflater, 8, true, "Cooldown", false));
+        return items;
+    }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        intervalAudioListAdapter.reload();
+        //intervalAudioListAdapter.reload();
     }
 
     @Override
@@ -78,7 +99,7 @@ public class IntervalSettingsFragment extends Fragment implements StartSettingsF
 
     @Override
     public void update() {
-        intervalAudioListAdapter.reload();
+        //intervalAudioListAdapter.reload();
     }
 
     TitleSpinner.OnSetValueListener intervalTypeSetValue = new TitleSpinner.OnSetValueListener() {

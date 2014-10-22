@@ -2,26 +2,25 @@ package org.runnerup.view;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import org.runnerup.R;
+import org.runnerup.view.list.ListViewModel;
+import org.runnerup.view.list.ListViewModelFragment;
+import org.runnerup.view.list.TwoLineViewModel;
 import org.runnerup.widget.DisabledEntriesAdapter;
-import org.runnerup.widget.TitleSpinner;
 import org.runnerup.workout.Dimension;
 import org.runnerup.workout.Workout;
 import org.runnerup.workout.WorkoutBuilder;
 
-public class BasicSettingsFragment extends Fragment implements StartSettingsFragment {
-    private TitleSpinner audioCueSpinner;
-    private TitleSpinner sportCueSpinner;
-    private TitleSpinner targetType;
-    private TitleSpinner targetPaceMax;
-    private TitleSpinner targetHrz;
+import java.util.ArrayList;
+import java.util.List;
+
+public class BasicSettingsFragment extends ListViewModelFragment implements StartSettings {
+
     private AudioSchemeListAdapter simpleAudioListAdapter;
-    private StartFragment startFragment;
+    private DatabaseProvider databaseProvider;
     private HRZonesListAdapter hrZonesAdapter;
     private DisabledEntriesAdapter targetEntriesAdapter = null;
 
@@ -29,27 +28,31 @@ public class BasicSettingsFragment extends Fragment implements StartSettingsFrag
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startFragment = (StartFragment) getParentFragment();
+        //databaseProvider = (DatabaseProvider) getParentFragment();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.start_basic, container, false);
+    protected List<ListViewModel> onCreateListItems(LayoutInflater inflater) {
+        List<ListViewModel> items = new ArrayList<ListViewModel>();
+        items.add(new TwoLineViewModel(inflater, 1, true, getString(R.string.basic_audio_cue_spinner), "Default"));
+        items.add(new TwoLineViewModel(inflater, 2, true, "Sport", "Running"));
+        items.add(new TwoLineViewModel(inflater, 3, true, "Target", "Pace"));
+        items.add(new TwoLineViewModel(inflater, 4, true, "Target pace (HH:MM:SS)", "00:05:00"));
+        return items;
+    }
 
-        audioCueSpinner = (TitleSpinner) view.findViewById(R.id.basic_audio_cue_spinner);
-        sportCueSpinner = (TitleSpinner) view.findViewById(R.id.basic_sport);
-        targetType = (TitleSpinner) view.findViewById(R.id.tab_basic_target_type);
-        targetPaceMax = (TitleSpinner) view.findViewById(R.id.tab_basic_target_pace_max);
-        targetHrz = (TitleSpinner) view.findViewById(R.id.tab_basic_target_hrz);
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
-        simpleAudioListAdapter = new AudioSchemeListAdapter(startFragment.getDB(), inflater, false);
-        simpleAudioListAdapter.reload();
-        audioCueSpinner.setAdapter(simpleAudioListAdapter);
-        hrZonesAdapter = new HRZonesListAdapter(getActivity(), inflater);
+        //simpleAudioListAdapter = new AudioSchemeListAdapter(databaseProvider.getDatabase(), getActivity().getLayoutInflater(), false);
+        //simpleAudioListAdapter.reload();
+        //audioCueSpinner.setAdapter(simpleAudioListAdapter);
+        hrZonesAdapter = new HRZonesListAdapter(getActivity(), getActivity().getLayoutInflater());
         targetEntriesAdapter = new DisabledEntriesAdapter(getActivity(), R.array.targetEntries);
 
-        targetHrz.setAdapter(hrZonesAdapter);
-        targetType.setOnCloseDialogListener(new TitleSpinner.OnCloseDialogListener() {
+        //targetHrz.setAdapter(hrZonesAdapter);
+        /*targetType.setOnCloseDialogListener(new TitleSpinner.OnCloseDialogListener() {
 
             @Override
             public void onClose(TitleSpinner spinner, boolean ok) {
@@ -57,28 +60,27 @@ public class BasicSettingsFragment extends Fragment implements StartSettingsFrag
                     updateTargetView();
                 }
             }
-        });
+        });*/
 
-        return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        simpleAudioListAdapter.reload();
+        //simpleAudioListAdapter.reload();
 
         hrZonesAdapter.reload();
-        targetHrz.setAdapter(hrZonesAdapter);
+        //targetHrz.setAdapter(hrZonesAdapter);
         if (!hrZonesAdapter.hrZones.isConfigured()) {
             targetEntriesAdapter.addDisabled(2);
         } else {
             targetEntriesAdapter.clearDisabled();
         }
-        targetType.setAdapter(targetEntriesAdapter);
+        //targetType.setAdapter(targetEntriesAdapter);
 
     }
-
+/*
     private void updateTargetView() {
         switch (targetType.getValueInt()) {
             case 0:
@@ -97,10 +99,11 @@ public class BasicSettingsFragment extends Fragment implements StartSettingsFrag
                 targetHrz.setVisibility(View.VISIBLE);
         }
     }
-
+*/
     @Override
     public Workout getWorkout(SharedPreferences pref) {
         Dimension target = null;
+        /*
         switch (targetType.getValueInt()) {
             case 0: // none
                 break;
@@ -111,6 +114,7 @@ public class BasicSettingsFragment extends Fragment implements StartSettingsFrag
                 target = Dimension.HRZ;
                 break;
         }
+        */
         return WorkoutBuilder.createDefaultWorkout(getResources(), pref, target);
     }
 
@@ -126,6 +130,6 @@ public class BasicSettingsFragment extends Fragment implements StartSettingsFrag
 
     @Override
     public void update() {
-        simpleAudioListAdapter.reload();
+        //simpleAudioListAdapter.reload();
     }
 }

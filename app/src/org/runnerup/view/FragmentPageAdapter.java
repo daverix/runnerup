@@ -6,10 +6,10 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import java.util.List;
 
-public class FragmentAdapter extends FragmentStatePagerAdapter {
+public class FragmentPageAdapter extends FragmentStatePagerAdapter {
     private List<FragmentPage> pages;
 
-    public FragmentAdapter(FragmentManager fm, List<FragmentPage> pages) {
+    public FragmentPageAdapter(FragmentManager fm, List<FragmentPage> pages) {
         super(fm);
         this.pages = pages;
     }
@@ -22,7 +22,7 @@ public class FragmentAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public int getCount() {
-        return 4;
+        return pages.size();
     }
 
     @Override

@@ -4,7 +4,7 @@ import android.content.SharedPreferences;
 
 import org.runnerup.workout.Workout;
 
-public interface StartSettingsFragment {
+public interface StartSettings {
     Workout getWorkout(SharedPreferences pref);
     SharedPreferences getAudioPreferences(SharedPreferences pref);
     boolean isStartButtonEnabled();

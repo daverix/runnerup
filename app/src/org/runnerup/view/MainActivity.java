@@ -19,22 +19,26 @@ package org.runnerup.view;
 
 import android.annotation.TargetApi;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
 
 import org.runnerup.R;
 import org.runnerup.db.DBHelper;
@@ -48,24 +52,28 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener, ViewPager.OnPageChangeListener {
     private ViewPager pager;
+    private ImageButton startRun;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
 
+        setPreferences();
+
         pager = (ViewPager) findViewById(R.id.pager);
+        startRun = (ImageButton) findViewById(R.id.btn_start_run);
+        startRun.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, StartRunActivity.class);
+                startActivity(intent);
+            }
+        });
 
         List<FragmentPage> pages = new ArrayList<FragmentPage>();
-        pages.add(new FragmentPage("START", "start", new FragmentFactory() {
-            @Override
-            public Fragment build() {
-                return new StartFragment();
-            }
-        }));
         pages.add(new FragmentPage("FEED", "feed", new FragmentFactory() {
             @Override
             public Fragment build() {
@@ -78,24 +86,13 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 return new HistoryFragment();
             }
         }));
-        pages.add(new FragmentPage("SETTINGS", "settings", new FragmentFactory() {
-            @Override
-            public Fragment build() {
-                return new SettingsFragment();
-            }
-        }));
-        pager.setAdapter(new FragmentAdapter(getSupportFragmentManager(), pages));
+        pager.setAdapter(new FragmentPageAdapter(getSupportFragmentManager(), pages));
         pager.setOnPageChangeListener(this);
 
         int currentTab = savedInstanceState != null ? savedInstanceState.getInt("currentTab") : 0;
 
         getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
         addTabs(pages, currentTab);
-
-
-        setPreferences();
     }
 
     @Override
@@ -284,5 +281,36 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
     public void whatsNew() {
         WhatsNewFragment dialog = new WhatsNewFragment();
         dialog.show(getSupportFragmentManager(), "whatsnewdialog");
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.menu_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        else if(item.getItemId() == R.id.menu_rate) {
+            try {
+                Uri uri = Uri.parse("market://details?id=" + getPackageName());
+                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return true;
+        }
+        else if(item.getItemId() == R.id.menu_whatsnew) {
+            WhatsNewFragment whatsNewFragment = new WhatsNewFragment();
+            whatsNewFragment.show(getSupportFragmentManager(), "whatsnewdialog");
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

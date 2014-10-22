@@ -12,7 +12,6 @@ import android.widget.EditText;
 
 import org.runnerup.R;
 import org.runnerup.util.Constants;
-import org.runnerup.util.Formatter;
 import org.runnerup.util.SafeParse;
 import org.runnerup.widget.TitleSpinner;
 import org.runnerup.workout.Workout;
@@ -21,7 +20,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
-public class ManualSettingsFragment extends Fragment implements StartSettingsFragment {
+public class ManualSettingsFragment extends Fragment implements StartSettings {
     boolean manualSetValue = false;
     TitleSpinner manualSport = null;
     TitleSpinner manualDate = null;
@@ -30,13 +29,13 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
     TitleSpinner manualDuration = null;
     TitleSpinner manualPace = null;
     EditText manualNotes = null;
-    StartFragment startFragment;
+    DatabaseProvider databaseProvider;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startFragment = (StartFragment) getParentFragment();
+        //databaseProvider = (DatabaseProvider) getParentFragment();
     }
 
     @Override
@@ -85,14 +84,14 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
         public String preSetValue(String newValue)
                 throws IllegalArgumentException {
             manualSetValue = true;
-            startFragment.startButton.setEnabled(true);
+            //databaseProvider.startButton.setEnabled(true);
             return newValue;
         }
 
         @Override
         public int preSetValue(int newValue) throws IllegalArgumentException {
             manualSetValue = true;
-            startFragment.startButton.setEnabled(true);
+            //databaseProvider.startButton.setEnabled(true);
             return newValue;
         }
     };
@@ -106,8 +105,8 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
             return;
         }
         double pace = seconds / dist;
-        manualPace.setValue(startFragment.formatter.formatPace(Formatter.TXT_SHORT, pace));
-        manualPace.setVisibility(View.VISIBLE);
+        //manualPace.setValue(databaseProvider.formatter.formatPace(Formatter.TXT_SHORT, pace));
+        //manualPace.setVisibility(View.VISIBLE);
         return;
     }
 
@@ -117,13 +116,13 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
         public String preSetValue(String newValue)
                 throws IllegalArgumentException {
             setManualPace(newValue, manualDuration.getValue().toString());
-            startFragment.startButton.setEnabled(true);
+            //databaseProvider.startButton.setEnabled(true);
             return newValue;
         }
 
         @Override
         public int preSetValue(int newValue) throws IllegalArgumentException {
-            startFragment.startButton.setEnabled(true);
+            //databaseProvider.startButton.setEnabled(true);
             return newValue;
         }
 
@@ -135,13 +134,13 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
         public String preSetValue(String newValue)
                 throws IllegalArgumentException {
             setManualPace(manualDistance.getValue().toString(), newValue);
-            startFragment.startButton.setEnabled(true);
+            //databaseProvider.startButton.setEnabled(true);
             return newValue;
         }
 
         @Override
         public int preSetValue(int newValue) throws IllegalArgumentException {
-            startFragment.startButton.setEnabled(true);
+            //databaseProvider.startButton.setEnabled(true);
             return newValue;
         }
     };
@@ -189,7 +188,7 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
         save.put(Constants.DB.ACTIVITY.START_TIME, start_time);
 
         save.put(Constants.DB.ACTIVITY.SPORT, sport);
-        long id = startFragment.getDB().insert(Constants.DB.ACTIVITY.TABLE, null, save);
+        long id = databaseProvider.getDatabase().insert(Constants.DB.ACTIVITY.TABLE, null, save);
 
         ContentValues lap = new ContentValues();
         lap.put(Constants.DB.LAP.ACTIVITY, id);
@@ -197,11 +196,11 @@ public class ManualSettingsFragment extends Fragment implements StartSettingsFra
         lap.put(Constants.DB.LAP.INTENSITY, Constants.DB.INTENSITY.ACTIVE);
         lap.put(Constants.DB.LAP.TIME, secs);
         lap.put(Constants.DB.LAP.DISTANCE, dist);
-        startFragment.getDB().insert(Constants.DB.LAP.TABLE, null, lap);
+        databaseProvider.getDatabase().insert(Constants.DB.LAP.TABLE, null, lap);
 
         Intent intent = new Intent(getActivity(), DetailActivity.class);
         intent.putExtra("mode", "save");
         intent.putExtra("ID", id);
-        startFragment.startActivityForResult(intent, 0);
+        getActivity().startActivityForResult(intent, 0);
     }
 }

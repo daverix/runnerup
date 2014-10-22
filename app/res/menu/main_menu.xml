@@ -16,22 +16,6 @@
   ~  along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <item
-        android:id="@+id/menu_accounts"
-        android:orderInCategory="100"
-        android:title="Manage accounts"/>
-
-    <item
-        android:id="@+id/menu_audio_cues"
-        android:orderInCategory="100"
-        android:title="Manage audio cues"/>
-
-    <item
-        android:id="@+id/menu_workouts"
-        android:orderInCategory="100"
-        android:title="Manage workouts" />
-
     <item
         android:id="@+id/menu_settings"
         android:orderInCategory="100"

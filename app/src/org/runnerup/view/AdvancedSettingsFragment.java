@@ -24,7 +24,7 @@ import org.runnerup.workout.WorkoutSerializer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdvancedSettingsFragment extends Fragment implements StartSettingsFragment {
+public class AdvancedSettingsFragment extends Fragment implements StartSettings {
     TitleSpinner advancedWorkoutSpinner = null;
     WorkoutListAdapter advancedWorkoutListAdapter = null;
     TitleSpinner advancedAudioSpinner = null;
@@ -33,21 +33,21 @@ public class AdvancedSettingsFragment extends Fragment implements StartSettingsF
     Workout advancedWorkout = null;
     ListView advancedStepList = null;
     WorkoutStepsAdapter advancedWorkoutStepsAdapter = new WorkoutStepsAdapter();
-    StartFragment startFragment;
+    DatabaseProvider databaseProvider;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startFragment = (StartFragment) getParentFragment();
+        //databaseProvider = (DatabaseProvider) getParentFragment();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.start_advanced, container, false);
 
-        advancedAudioListAdapter = new AudioSchemeListAdapter(startFragment.getDB(), inflater, false);
-        advancedAudioListAdapter.reload();
+        //advancedAudioListAdapter = new AudioSchemeListAdapter(databaseProvider.getDatabase(), inflater, false);
+        //advancedAudioListAdapter.reload();
         advancedAudioSpinner = (TitleSpinner) view.findViewById(R.id.advanced_audio_cue_spinner);
         advancedAudioSpinner.setAdapter(advancedAudioListAdapter);
         advancedWorkoutSpinner = (TitleSpinner) view.findViewById(R.id.advanced_workout_spinner);
@@ -81,7 +81,7 @@ public class AdvancedSettingsFragment extends Fragment implements StartSettingsF
             }
         });
 
-        return super.onCreateView(inflater, container, savedInstanceState);
+        return view;
     }
 
     @Override
@@ -109,7 +109,7 @@ public class AdvancedSettingsFragment extends Fragment implements StartSettingsF
     public void onResume() {
         super.onResume();
 
-        advancedAudioListAdapter.reload();
+        //advancedAudioListAdapter.reload();
         advancedWorkoutListAdapter.reload();
 
         loadAdvanced(null);

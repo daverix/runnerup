@@ -29,11 +29,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -74,17 +75,16 @@ public class FeedFragment extends Fragment implements Constants {
     ListView feedList = null;
     FeedListAdapter feedAdapter = null;
 
-    Button refreshButton = null;
     LinearLayout feedHeader = null;
     TextView feedStatus = null;
     ProgressBar feedProgressBar = null;
 
-    Button feedAccountButton = null;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
+        setHasOptionsMenu(true);
+
         mDBHelper = new DBHelper(getActivity());
         uploadManager = new UploadManager(getActivity());
         formatter = new Formatter(getActivity());
@@ -102,29 +102,6 @@ public class FeedFragment extends Fragment implements Constants {
         feedList.setAdapter(feedAdapter);
         feedList.setDividerHeight(2);
 
-        refreshButton = (Button) view.findViewById(R.id.refresh_feed_button);
-        refreshButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                feed.reset();
-                feed.getList().clear();
-                feedAdapter.feed.clear();
-                feedAdapter.notifyDataSetInvalidated();
-                uploadManager.clear();
-                startSync();
-            }
-        });
-
-        feedAccountButton = (Button) view.findViewById(R.id.feed_account_button);
-        feedAccountButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(getActivity(),
-                        AccountListActivity.class);
-                startActivityForResult(i, 0);
-            }
-        });
-
         feedHeader = (LinearLayout) view.findViewById(R.id.feed_header);
         feedStatus = (TextView) view.findViewById(R.id.feed_status);
         
@@ -136,6 +113,27 @@ public class FeedFragment extends Fragment implements Constants {
         super.onActivityCreated(savedInstanceState);
 
         startSync();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.feed_list, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.refresh_feed) {
+            feed.reset();
+            feed.getList().clear();
+            feedAdapter.feed.clear();
+            feedAdapter.notifyDataSetInvalidated();
+            uploadManager.clear();
+            startSync();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     StringBuffer cancelSync = null;
@@ -169,25 +167,19 @@ public class FeedFragment extends Fragment implements Constants {
         c.close();
         db.close();
         if (!set.isEmpty()) {
-            feedAccountButton.setVisibility(View.GONE);
-            refreshButton.setVisibility(View.VISIBLE);
             feedHeader.setVisibility(View.VISIBLE);
 
-            refreshButton.setEnabled(false);
             feedStatus.setText("Synchronizing feed");
             cancelSync = new StringBuffer();
             uploadManager.syncronizeFeed(syncDone, set, feed, cancelSync);
         } else {
             feedHeader.setVisibility(View.GONE);
-            refreshButton.setVisibility(View.GONE);
-            feedAccountButton.setVisibility(View.VISIBLE);
         }
     }
 
     Callback syncDone = new Callback() {
         @Override
         public void run(String uploader, Status status) {
-            refreshButton.setEnabled(true);
             feedHeader.setVisibility(View.GONE);
         }
     };

@@ -17,32 +17,6 @@
 
 package org.runnerup.view;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-
-import org.runnerup.R;
-import org.runnerup.content.WorkoutFileProvider;
-import org.runnerup.db.DBHelper;
-import org.runnerup.export.UploadManager;
-import org.runnerup.export.UploadManager.Callback;
-import org.runnerup.export.UploadManager.WorkoutRef;
-import org.runnerup.export.Uploader;
-import org.runnerup.export.Uploader.Status;
-import org.runnerup.util.Constants;
-import org.runnerup.workout.Workout;
-import org.runnerup.workout.WorkoutSerializer;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -74,6 +48,32 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.runnerup.R;
+import org.runnerup.content.WorkoutFileProvider;
+import org.runnerup.db.DBHelper;
+import org.runnerup.export.UploadManager;
+import org.runnerup.export.UploadManager.Callback;
+import org.runnerup.export.UploadManager.WorkoutRef;
+import org.runnerup.export.Uploader;
+import org.runnerup.export.Uploader.Status;
+import org.runnerup.util.Constants;
+import org.runnerup.workout.Workout;
+import org.runnerup.workout.WorkoutSerializer;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.FROYO)
 public class ManageWorkoutsActivity extends Activity implements Constants {
@@ -275,7 +275,8 @@ public class ManageWorkoutsActivity extends Activity implements Constants {
         pref.edit().putString(getResources().getString(R.string.pref_advanced_workout), fileName).commit();
 
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("mode", StartFragment.TAB_ADVANCED);
+        //intent.putExtra("mode", StartRunActivity.TAB_ADVANCED);
+        //TODO: fix above
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
