@@ -68,7 +68,7 @@
 			</intent-filter>
   		</activity>
 
-        <activity android:name=".view.StartRunActivity"
+        <activity android:name=".view.StartActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:screenOrientation="portrait" />
 

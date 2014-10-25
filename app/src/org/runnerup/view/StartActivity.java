@@ -43,7 +43,7 @@ import org.runnerup.workout.HeadsetButtonReceiver;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StartRunActivity extends ActionBarActivity implements GpsInformation, TickListener {
+public class StartActivity extends ActionBarActivity implements GpsInformation, TickListener {
     private Toolbar toolbar;
     private SlidingTabLayout slidingTabLayout;
     private ViewPager pager;
