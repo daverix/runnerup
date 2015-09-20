@@ -15,139 +15,131 @@
   ~  You should have received a copy of the GNU General Public License
   ~  along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/tab1_layout"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical"
-    tools:context=".view.StartActivity" >
-    
-    <TabHost
-        android:id="@+id/tabhost_start"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                 xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                 android:id="@android:id/tabhost"
+                                                 android:layout_width="fill_parent"
+                                                 android:layout_height="fill_parent">
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <android.support.v7.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:navigationIcon="@drawable/ic_action_navigation_menu"
+            app:title="Start Run"
+            android:id="@+id/toolbar" />
+        <android.support.design.widget.TabLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tabs" />
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.view.ViewPager
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:layout_above="@+id/gpsinfo" >
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
-
-		    <TabWidget
-    		    android:id="@android:id/tabs"
-        		android:layout_width="match_parent"
-        		android:layout_height="wrap_content" >
-    		</TabWidget>
-            
-            <FrameLayout
-                android:id="@android:id/tabcontent"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_below="@android:id/tabs" >
-                
-                <include layout="@layout/start_basic" />
-                <include layout="@layout/start_interval" />
-                <include layout="@layout/start_advanced" />
-                <include layout="@layout/start_manual" />
-			</FrameLayout>
-        </RelativeLayout>
-    </TabHost>
-
-    <RelativeLayout
-        android:id="@+id/gpsinfo"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_above="@+id/start_buttons" >
-
-	<TextView
-        android:id="@+id/gps_info_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/GPS_satellites" />
-	
-	<TextView
-        android:id="@+id/gps_info1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/gps_info_text" />
-
-    <TextView
-        android:id="@+id/gps_info2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/gps_info1" />
-    <TextView
-        android:id="@+id/hr_info"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/gps_info2"
-        android:gravity="center" />
-    </RelativeLayout>
+        android:id="@+id/pager"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <LinearLayout
-        android:id="@+id/start_buttons"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/start_button"
-            style="@style/ButtonText"
-            android:layout_width="0dp"
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
+        <RelativeLayout
+            android:id="@+id/gpsinfo"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/btn_green"
-            android:enabled="true"
-            android:text="@string/Start_GPS"
-            android:layout_weight="0.8"
-            android:drawableRight="@drawable/ic_av_play_arrow"
-            android:drawablePadding="-32dp" />
+            android:orientation="horizontal"
+            android:layout_above="@+id/start_buttons" >
 
-        <FrameLayout
-            android:id="@+id/hr_layout"
-            android:layout_width="0dp"
-            android:layout_weight="0.15"
-            android:layout_height="match_parent" >
+        <TextView
+            android:id="@+id/gps_info_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/GPS_satellites" />
 
-            <ImageButton
-                android:id="@+id/hr_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/heart" />
+        <TextView
+            android:id="@+id/gps_info1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/gps_info_text" />
 
-            <TextView
-                android:id="@+id/hr_value_text"
-                android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/gps_info2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/gps_info1" />
+        <TextView
+            android:id="@+id/hr_info"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/gps_info2"
+            android:gravity="center" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/start_buttons"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/start_button"
+                style="@style/ButtonText"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="\?" />
-        </FrameLayout>
+                android:background="@drawable/btn_green"
+                android:enabled="true"
+                android:text="@string/Start_GPS"
+                android:layout_weight="0.8"
+                android:drawableRight="@drawable/ic_av_play_arrow"
+                android:drawablePadding="-32dp" />
 
-        <FrameLayout
-            android:id="@+id/wear_layout"
-            android:layout_width="0dp"
-            android:layout_weight="0.15"
-            android:layout_height="match_parent" >
+            <FrameLayout
+                android:id="@+id/hr_layout"
+                android:layout_width="0dp"
+                android:layout_weight="0.15"
+                android:layout_height="match_parent" >
 
-            <ImageButton
-                android:id="@+id/wear_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/wear" />
+                <ImageButton
+                    android:id="@+id/hr_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/heart" />
 
-            <TextView
-                android:id="@+id/wear_value_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="\?" />
-        </FrameLayout>
+                <TextView
+                    android:id="@+id/hr_value_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="\?" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/wear_layout"
+                android:layout_width="0dp"
+                android:layout_weight="0.15"
+                android:layout_height="match_parent" >
+
+                <ImageButton
+                    android:id="@+id/wear_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/wear" />
+
+                <TextView
+                    android:id="@+id/wear_value_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="\?" />
+            </FrameLayout>
+        </LinearLayout>
     </LinearLayout>
-
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

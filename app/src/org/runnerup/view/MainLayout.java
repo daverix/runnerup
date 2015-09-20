@@ -34,11 +34,13 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -60,20 +62,29 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class MainLayout extends AppCompatActivity {
+public class MainLayout extends AppCompatActivity implements DrawerOpener {
+
+
     private enum UpgradeState {
-        UNKNOWN, NEW, UPGRADE, DOWNGRADE, SAME
+        UNKNOWN, NEW, UPGRADE, DOWNGRADE, SAME;
     }
+    private DrawerLayout drawerLayout;
 
-    private ViewPager pager;
-    private TabLayout tabs;
-
+    private NavigationView navigationView;
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        pager = (ViewPager) findViewById(R.id.pager);
-        tabs = (TabLayout) findViewById(R.id.tabs);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        navigationView = (NavigationView) findViewById(R.id.navigationDrawer);
+
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content);
+        if(fragment == null) {
+            fragment = new StartFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.content, fragment)
+                    .commit();
+        }
 
         int versionCode = 0;
         UpgradeState upgradeState = UpgradeState.UNKNOWN;
@@ -113,8 +124,6 @@ public class MainLayout extends AppCompatActivity {
         PreferenceManager.setDefaultValues(this, R.layout.settings, false);
         PreferenceManager.setDefaultValues(this, R.layout.audio_cue_settings, true);
 
-        setupPages();
-
         WidgetUtil.addLegacyOverflowButton(getWindow());
 
         if (upgradeState == UpgradeState.UPGRADE) {
@@ -141,50 +150,9 @@ public class MainLayout extends AppCompatActivity {
         }
     }
 
-    private void setupPages() {
-        pager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
-        tabs.setupWithViewPager(pager);
-    }
-
-    private class MainPagerAdapter extends FragmentStatePagerAdapter {
-        public MainPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case 0:
-                    return new StartFragment();
-                case 1:
-                    return new FeedFragment();
-                case 2:
-                    return new HistoryFragment();
-                case 3:
-                    return new SettingsFragment();
-            }
-            return null;
-        }
-
-        @Override
-        public int getCount() {
-            return 4;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0:
-                    return getString(R.string.Start); //R.drawable.ic_tab_main
-                case 1:
-                    return getString(R.string.feed); //R.drawable.ic_tab_feed
-                case 2:
-                    return getString(R.string.History); //R.drawable.ic_tab_history
-                case 3:
-                    return getString(R.string.Settings); //R.drawable.ic_tab_setup
-            }
-            return super.getPageTitle(position);
-        }
+    @Override
+    public void openDrawer() {
+        drawerLayout.openDrawer(navigationView);
     }
 
     void handleBundled(AssetManager mgr, String src, String dst) {
@@ -206,7 +174,7 @@ public class MainLayout extends AppCompatActivity {
                 }
 
                 Log.e(getClass().getName(), "Found: " + dst + ", " + add + ", isFile: " + isFile);
-                if (isFile == false) {
+                if (!isFile) {
                     File dstDir = new File(dst + File.separator + add);
                     dstDir.mkdir();
                     if (!dstDir.isDirectory()) {
@@ -290,7 +258,7 @@ public class MainLayout extends AppCompatActivity {
                 i = new Intent(this, AudioCueSettingsActivity.class);
                 break;
             case R.id.menu_settings:
-                pager.setCurrentItem(3, true);
+                //TODO: open settings activity?
                 return true;
             case R.id.menu_rate:
                 onRateClick.onClick(null);
