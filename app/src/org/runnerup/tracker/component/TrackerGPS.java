@@ -16,14 +16,17 @@
  */
 package org.runnerup.tracker.component;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.content.ContextCompat;
 
 import org.runnerup.R;
 import org.runnerup.tracker.GpsStatus;
@@ -76,12 +79,16 @@ public class TrackerGPS extends DefaultTrackerComponent implements TickListener 
 
     @Override
     public ResultCode onConnecting(final Callback callback, Context context) {
+        if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return ResultCode.RESULT_ERROR;
+        }
+
         try {
             LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
             frequency_ms = Integer.valueOf(preferences.getString(context.getString(
                     R.string.pref_pollInterval), "500"));
-            if (mWithoutGps == false) {
+            if (!mWithoutGps) {
                 String frequency_meters = preferences.getString(context.getString(
                         R.string.pref_pollDistance), "5");
                 lm.requestLocationUpdates(GPS_PROVIDER,
@@ -133,7 +140,11 @@ public class TrackerGPS extends DefaultTrackerComponent implements TickListener 
 
     @Override
     public ResultCode onEnd(Callback callback, Context context) {
-        if (mWithoutGps == false) {
+        if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return ResultCode.RESULT_ERROR;
+        }
+
+        if (!mWithoutGps) {
             LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
             try {
                 lm.removeUpdates(tracker);

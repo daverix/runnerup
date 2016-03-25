@@ -26,13 +26,14 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.runnerup.util.TickListener;
 /**
- * 
+ *
  * This is a helper class that is used to determine when the GPS status is good
  * enough (isFixed())
- * 
+ *
  */
 
 @TargetApi(Build.VERSION_CODES.FROYO)
@@ -69,30 +70,26 @@ public class GpsStatus implements LocationListener,
     public GpsStatus(Context ctx) {
         this.context = ctx;
         mHistory = new Location[HIST_LEN];
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
     }
 
     public void start(TickListener listener) {
         clear(true);
         this.listener = listener;
-        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         try {
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        } catch (Exception ex) {
-            lm = null;
-        }
-
-        if (lm != null) {
-            locationManager = lm;
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
             locationManager.addGpsStatusListener(this);
+        } catch (SecurityException ex) {
+            Log.e("GpsStatus", "User must accept permissions", ex);
         }
     }
 
     public void stop(TickListener listener) {
-        this.listener = null;
-        if (locationManager != null) {
-            locationManager.removeGpsStatusListener(this);
+        locationManager.removeGpsStatusListener(this);
+        try {
             locationManager.removeUpdates(this);
-            locationManager = null;
+        } catch (SecurityException ex) {
+            Log.e("GpsStatus", "User must accept permissions", ex);
         }
     }
 

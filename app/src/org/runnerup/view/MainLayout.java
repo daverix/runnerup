@@ -17,10 +17,8 @@
 
 package org.runnerup.view;
 
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Service;
-import android.app.TabActivity;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,39 +29,32 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebView;
-import android.widget.TabHost;
 
 import org.runnerup.R;
 import org.runnerup.common.util.Constants.DB;
 import org.runnerup.db.DBHelper;
 import org.runnerup.util.FileUtil;
 import org.runnerup.util.Formatter;
-import org.runnerup.widget.WidgetUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
-public class MainLayout extends TabActivity {
-
-    private Drawable myGetDrawable(int resId) {
-        Drawable d = getResources().getDrawable(resId);
-        return d;
-    }
+public class MainLayout extends AppCompatActivity {
 
     private enum UpgradeState {
         UNKNOWN, NEW, UPGRADE, DOWNGRADE, SAME
@@ -111,29 +102,12 @@ public class MainLayout extends TabActivity {
         PreferenceManager.setDefaultValues(this, R.layout.settings, false);
         PreferenceManager.setDefaultValues(this, R.layout.audio_cue_settings, true);
 
-        TabHost tabHost = getTabHost(); // The activity TabHost
+        setupBottomNavigation();
 
-        tabHost.addTab(tabHost.newTabSpec("Start")
-                .setIndicator(getString(R.string.Start), myGetDrawable(R.drawable.ic_tab_main))
-                .setContent(new Intent(this, StartActivity.class)));
-
-        tabHost.addTab(tabHost.newTabSpec("Feed")
-                .setIndicator(getString(R.string.feed), myGetDrawable(R.drawable.ic_tab_feed))
-                .setContent(new Intent(this, FeedActivity.class)));
-
-        tabHost.addTab(tabHost.newTabSpec("History")
-                .setIndicator(getString(R.string.History), myGetDrawable(R.drawable.ic_tab_history))
-                .setContent(new Intent(this, HistoryActivity.class)));
-
-        tabHost.addTab(tabHost.newTabSpec("Settings")
-                .setIndicator(getString(R.string.Settings), myGetDrawable(R.drawable.ic_tab_setup))
-                .setContent(new Intent(this, SettingsActivity.class)));
-
-        // Set tabs Colors
-        tabHost.setBackgroundColor(Color.BLACK);
-        tabHost.getTabWidget().setBackgroundColor(Color.BLACK);
-        tabHost.setCurrentTab(0);
-        WidgetUtil.addLegacyOverflowButton(getWindow());
+        FragmentManager fm = getSupportFragmentManager();
+        if(fm.findFragmentById(R.id.content) == null) {
+            fm.beginTransaction().add(R.id.content, new StartFragment()).commit();
+        }
 
         if (upgradeState == UpgradeState.UPGRADE) {
             whatsNew();
@@ -157,6 +131,83 @@ public class MainLayout extends TabActivity {
             Log.i(getClass().getSimpleName(), "Importing database from " + filePath);
             DBHelper.importDatabase(MainLayout.this, filePath);
         }
+    }
+
+    private void setupBottomNavigation() {
+        TabLayout navigationBar = (TabLayout) findViewById(R.id.navigationBar);
+        navigationBar.addTab(navigationBar.newTab()
+            .setIcon(R.drawable.ic_tab_main_unselected)
+            .setText(R.string.Start));
+
+        navigationBar.addTab(navigationBar.newTab()
+                .setIcon(R.drawable.ic_tab_feed_unselected)
+                .setText(R.string.feed));
+
+        navigationBar.addTab(navigationBar.newTab()
+                .setIcon(R.drawable.ic_tab_history_unselected)
+                .setText(R.string.History));
+
+        navigationBar.addTab(navigationBar.newTab()
+                .setIcon(R.drawable.ic_tab_setup_unselected)
+                .setText(R.string.Settings));
+
+        navigationBar.setTabTextColors(ContextCompat.getColor(this, R.color.white),
+                ContextCompat.getColor(this, R.color.green));
+        navigationBar.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switchTabs(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                switchTabs(tab.getPosition());
+            }
+        });
+    }
+
+    private void switchTabs(int position) {
+        switch (position) {
+            case 0:
+                replace(new StartFragment());
+                break;
+            case 1:
+                replace(new FeedFragment());
+                break;
+            case 2:
+                replace(new HistoryFragment());
+                break;
+            case 3:
+                //TODO: should be converted to a fragment
+                startActivity(new Intent(this, SettingsActivity.class));
+                break;
+        }
+    }
+
+    private void replace(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.content, fragment)
+                .setCustomAnimations(android.R.anim.fade_in,
+                        android.R.anim.fade_out,
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out)
+                .commit();
+    }
+
+    public void navigateTo(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .addToBackStack(null)
+                .replace(R.id.content, fragment)
+                .commit();
+    }
+
+    public void navigateUp() {
+        getSupportFragmentManager().popBackStack();
     }
 
     void handleBundled(AssetManager mgr, String src, String dst) {
@@ -245,35 +296,6 @@ public class MainLayout extends TabActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Intent i = null;
-        switch (item.getItemId()) {
-            case R.id.menu_accounts:
-                i = new Intent(this, AccountListActivity.class);
-                break;
-            case R.id.menu_workouts:
-                i = new Intent(this, ManageWorkoutsActivity.class);
-                break;
-            case R.id.menu_audio_cues:
-                i = new Intent(this, AudioCueSettingsActivity.class);
-                break;
-            case R.id.menu_settings:
-                getTabHost().setCurrentTab(3);
-                return true;
-            case R.id.menu_rate:
-                onRateClick.onClick(null);
-                break;
-            case R.id.menu_whatsnew:
-                whatsNew();
-                break;
-        }
-        if (i != null) {
-            startActivity(i);
-        }
         return true;
     }
 

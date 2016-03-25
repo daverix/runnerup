@@ -253,7 +253,7 @@ public class UploadActivity extends ListActivity implements Constants {
         @Override
         public void onClick(View arg0) {
             long id = (Long) arg0.getTag();
-            Intent intent = new Intent(UploadActivity.this, DetailActivity.class);
+            Intent intent = new Intent(UploadActivity.this, DetailFragment.class);
             intent.putExtra("ID", id);
             intent.putExtra("mode", "details");
             startActivityForResult(intent, 100);

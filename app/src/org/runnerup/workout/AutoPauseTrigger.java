@@ -20,8 +20,7 @@ package org.runnerup.workout;
 import android.annotation.TargetApi;
 import android.location.Location;
 import android.os.Build;
-
-import org.runnerup.tracker.Tracker;
+import android.util.Log;
 
 @TargetApi(Build.VERSION_CODES.FROYO)
 public class AutoPauseTrigger extends Trigger {
@@ -47,6 +46,10 @@ public class AutoPauseTrigger extends Trigger {
 
     private void HandleAutoPause(Workout workout) {
         Location lastLocation = workout.getLastKnownLocation();
+        if(lastLocation == null) {
+            Log.e("AutoPauseTrigger", "Last known location is null");
+            return;
+        }
         Double currentSpeed = workout.getSpeed(Scope.CURRENT);
         if (currentSpeed == null)
             return;

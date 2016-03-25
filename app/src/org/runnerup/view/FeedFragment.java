@@ -17,19 +17,13 @@
 
 package org.runnerup.view;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,34 +34,26 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 
 import org.runnerup.R;
+import org.runnerup.common.util.Constants;
+import org.runnerup.common.util.Constants.DB.FEED;
 import org.runnerup.db.DBHelper;
 import org.runnerup.export.SyncManager;
 import org.runnerup.export.SyncManager.Callback;
 import org.runnerup.export.Synchronizer.Status;
 import org.runnerup.feed.FeedImageLoader;
 import org.runnerup.feed.FeedList;
-import org.runnerup.common.util.Constants;
-import org.runnerup.common.util.Constants.DB.FEED;
-import org.runnerup.feedwidget.FeedWidgetProvider;
 import org.runnerup.util.Formatter;
 
-import java.io.InputStream;
-import java.net.URL;
 import java.text.DateFormat;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
-import java.util.WeakHashMap;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
-public class FeedActivity extends Activity implements Constants {
+public class FeedFragment extends Fragment implements Constants {
 
     DBHelper mDBHelper = null;
     SyncManager syncManager = null;
@@ -84,23 +70,23 @@ public class FeedActivity extends Activity implements Constants {
 
     Button feedAccountButton = null;
 
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.feed);
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.feed, container, false);
 
-        mDBHelper = new DBHelper(this);
-        syncManager = new SyncManager(this);
-        formatter = new Formatter(this);
+        mDBHelper = new DBHelper(getActivity());
+        syncManager = new SyncManager(getActivity());
+        formatter = new Formatter(getActivity());
         feed = new FeedList(mDBHelper);
         feed.load(); // load from DB
 
-        feedAdapter = new FeedListAdapter(this, feed);
-        feedList = (ListView) findViewById(R.id.feed_list);
+        feedAdapter = new FeedListAdapter(getActivity(), feed);
+        feedList = (ListView) view.findViewById(R.id.feed_list);
         feedList.setAdapter(feedAdapter);
         feedList.setDividerHeight(2);
 
-        refreshButton = (Button) findViewById(R.id.refresh_feed_button);
+        refreshButton = (Button) view.findViewById(R.id.refresh_feed_button);
         refreshButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -112,19 +98,21 @@ public class FeedActivity extends Activity implements Constants {
             }
         });
 
-        feedAccountButton = (Button) findViewById(R.id.feed_account_button);
+        feedAccountButton = (Button) view.findViewById(R.id.feed_account_button);
         feedAccountButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(FeedActivity.this,
+                Intent i = new Intent(getActivity(),
                         AccountListActivity.class);
                 startActivityForResult(i, 0);
             }
         });
 
-        feedHeader = (LinearLayout) findViewById(R.id.feed_header);
-        feedStatus = (TextView) findViewById(R.id.feed_status);
+        feedHeader = (LinearLayout) view.findViewById(R.id.feed_header);
+        feedStatus = (TextView) view.findViewById(R.id.feed_status);
         startSync();
+
+        return view;
     }
 
     void startSync() {
@@ -153,7 +141,7 @@ public class FeedActivity extends Activity implements Constants {
     };
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
     }
 
@@ -166,7 +154,7 @@ public class FeedActivity extends Activity implements Constants {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         startSync();
     }
 
@@ -246,7 +234,7 @@ public class FeedActivity extends Activity implements Constants {
 
                 String name = formatter.formatName(tmp.getAsString(DB.FEED.USER_FIRST_NAME),
                         tmp.getAsString(DB.FEED.USER_LAST_NAME));
-                String sport = FeedActivity.GetSportActivity(tmp);
+                String sport = FeedFragment.GetSportActivity(tmp);
                 tv1.setText(name + " trained " + sport);
                 if (tmp.containsKey(DB.FEED.DISTANCE) || tmp.containsKey(DB.FEED.DURATION)) {
                     double distance = 0;

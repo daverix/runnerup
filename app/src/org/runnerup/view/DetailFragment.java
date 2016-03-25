@@ -17,7 +17,6 @@
 
 package org.runnerup.view;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -32,13 +31,13 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -91,9 +90,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.FROYO)
-public class DetailActivity extends FragmentActivity implements Constants {
-
+public class DetailFragment extends Fragment implements Constants {
     long mID = 0;
     DBHelper mDBHelper = null;
     SQLiteDatabase mDB = null;
@@ -135,21 +132,30 @@ public class DetailActivity extends FragmentActivity implements Constants {
     SyncManager syncManager = null;
     Formatter formatter = null;
 
-    /** Called when the activity is first created. */
+    private Toolbar toolbar;
+
+    public static DetailFragment newInstance(long id, String details) {
+        DetailFragment fragment = new DetailFragment();
+        Bundle args = new Bundle();
+        args.putLong("ID", id);
+        args.putString("mode", details);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.detail);
-        WidgetUtil.addLegacyOverflowButton(getWindow());
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.detail, container, false);
 
-        Intent intent = getIntent();
-        mID = intent.getLongExtra("ID", -1);
-        String mode = intent.getStringExtra("mode");
+        Bundle args = getArguments();
+        mID = args.getLong("ID", -1);
+        String mode = args.getString("mode");
 
-        mDBHelper = new DBHelper(this);
+        mDBHelper = new DBHelper(getActivity());
         mDB = mDBHelper.getReadableDatabase();
-        syncManager = new SyncManager(this);
-        formatter = new Formatter(this);
+        syncManager = new SyncManager(getActivity());
+        formatter = new Formatter(getActivity());
 
         if (mode.contentEquals("save")) {
             this.mode = MODE_SAVE;
@@ -159,16 +165,54 @@ public class DetailActivity extends FragmentActivity implements Constants {
             assert (false);
         }
 
-        saveButton = (Button) findViewById(R.id.save_button);
-        discardButton = (Button) findViewById(R.id.discard_button);
-        resumeButton = (Button) findViewById(R.id.resume_button);
-        uploadButton = (Button) findViewById(R.id.upload_button);
-        activityTime = (TextView) findViewById(R.id.activity_time);
-        activityDistance = (TextView) findViewById(R.id.activity_distance);
-        activityPace = (TextView) findViewById(R.id.activity_pace);
-        sport = (TitleSpinner) findViewById(R.id.summary_sport);
-        notes = (EditText) findViewById(R.id.notes_text);
-        map = (MapView) findViewById(R.id.mapview);
+        toolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        saveButton = (Button) view.findViewById(R.id.save_button);
+        discardButton = (Button) view.findViewById(R.id.discard_button);
+        resumeButton = (Button) view.findViewById(R.id.resume_button);
+        uploadButton = (Button) view.findViewById(R.id.upload_button);
+        activityTime = (TextView) view.findViewById(R.id.activity_time);
+        activityDistance = (TextView) view.findViewById(R.id.activity_distance);
+        activityPace = (TextView) view.findViewById(R.id.activity_pace);
+        sport = (TitleSpinner) view.findViewById(R.id.summary_sport);
+        notes = (EditText) view.findViewById(R.id.notes_text);
+        map = (MapView) view.findViewById(R.id.mapview);
+
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back);
+        toolbar.setNavigationOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainLayout) getActivity()).navigateUp();
+            }
+        });
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.menu_delete_activity:
+                        showDeleteDialog();
+                        return true;
+                    case R.id.menu_edit_activity:
+                        if (!edit) {
+                            setEdit(true);
+                            notes.requestFocus();
+                            requery();
+                        }
+                        return true;
+                    case R.id.menu_recompute_activity:
+                        new ActivityCleaner().recompute(mDB, mID);
+                        requery();
+                        return true;
+                    case R.id.menu_share_activity:
+                        shareActivity();
+                        return true;
+                }
+
+                return false;
+            }
+        });
+        toolbar.inflateMenu(R.menu.detail_menu);
+        recomputeMenuItem = toolbar.getMenu().findItem(R.id.menu_recompute_activity);
+
         saveButton.setOnClickListener(saveButtonClick);
         uploadButton.setOnClickListener(uploadButtonClick);
         if (this.mode == MODE_SAVE) {
@@ -187,50 +231,50 @@ public class DetailActivity extends FragmentActivity implements Constants {
 
         loadRoute();
 
-        TabHost th = (TabHost) findViewById(R.id.tabhost);
+        TabHost th = (TabHost) view.findViewById(R.id.tabhost);
         th.setup();
         TabSpec tabSpec = th.newTabSpec("notes");
-        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(this, getString(R.string.Notes)));
+        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(getActivity(), getString(R.string.Notes)));
         tabSpec.setContent(R.id.tab_main);
         th.addTab(tabSpec);
 
         tabSpec = th.newTabSpec("laps");
-        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(this, getString(R.string.Laps)));
+        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(getActivity(), getString(R.string.Laps)));
         tabSpec.setContent(R.id.tab_lap);
         th.addTab(tabSpec);
 
         tabSpec = th.newTabSpec("map");
-        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(this, getString(R.string.Map)));
+        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(getActivity(), getString(R.string.Map)));
         tabSpec.setContent(R.id.tab_map);
         th.addTab(tabSpec);
 
         tabSpec = th.newTabSpec("graph");
-        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(this, getString(R.string.Graph)));
+        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(getActivity(), getString(R.string.Graph)));
         tabSpec.setContent(R.id.tab_graph);
         th.addTab(tabSpec);
 
         tabSpec = th.newTabSpec("share");
-        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(this, getString(R.string.Upload)));
+        tabSpec.setIndicator(WidgetUtil.createHoloTabIndicator(getActivity(), getString(R.string.Upload)));
         tabSpec.setContent(R.id.tab_upload);
         th.addTab(tabSpec);
 
         th.getTabWidget().setBackgroundColor(Color.DKGRAY);
 
         {
-            ListView lv = (ListView) findViewById(R.id.laplist);
+            ListView lv = (ListView) view.findViewById(R.id.laplist);
             LapListAdapter adapter = new LapListAdapter();
             adapters.add(adapter);
             lv.setAdapter(adapter);
         }
         {
-            ListView lv = (ListView) findViewById(R.id.report_list);
+            ListView lv = (ListView) view.findViewById(R.id.report_list);
             ReportListAdapter adapter = new ReportListAdapter();
             adapters.add(adapter);
             lv.setAdapter(adapter);
         }
-        graphTab = (LinearLayout) findViewById(R.id.tab_graph);
+        graphTab = (LinearLayout) view.findViewById(R.id.tab_graph);
         {
-            graphView = new LineGraphView(this, getString(R.string.Pace)) {
+            graphView = new LineGraphView(getActivity(), getString(R.string.Pace)) {
                 @Override
                 protected String formatLabel(double value, boolean isValueX) {
                     if (!isValueX) {
@@ -240,7 +284,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
                 }
             };
 
-            graphView2 = new LineGraphView(this, getString(R.string.Heart_rate)) {
+            graphView2 = new LineGraphView(getActivity(), getString(R.string.Heart_rate)) {
                 @Override
                 protected String formatLabel(double value, boolean isValueX) {
                     if (!isValueX) {
@@ -252,8 +296,10 @@ public class DetailActivity extends FragmentActivity implements Constants {
                 }
             };
         }
-        hrzonesBarLayout = (LinearLayout) findViewById(R.id.hrzonesBarLayout);
-        hrzonesBar = new HRZonesBar(this);
+        hrzonesBarLayout = (LinearLayout) view.findViewById(R.id.hrzonesBarLayout);
+        hrzonesBar = new HRZonesBar(getActivity());
+
+        return view;
     }
 
     private void setEdit(boolean value) {
@@ -264,39 +310,6 @@ public class DetailActivity extends FragmentActivity implements Constants {
         sport.setEnabled(value);
         if (recomputeMenuItem != null)
             recomputeMenuItem.setEnabled(value);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if (mode == MODE_DETAILS) {
-            getMenuInflater().inflate(R.menu.detail_menu, menu);
-            recomputeMenuItem = menu.findItem(R.id.menu_recompute_activity);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_delete_activity:
-                deleteButtonClick.onClick(null);
-                break;
-            case R.id.menu_edit_activity:
-                if (edit == false) {
-                    setEdit(true);
-                    notes.requestFocus();
-                    requery();
-                }
-                break;
-            case R.id.menu_recompute_activity:
-                new ActivityCleaner().recompute(mDB, mID);
-                requery();
-                break;
-            case R.id.menu_share_activity:
-                shareActivity();
-                break;
-        }
-        return true;
     }
 
     @Override
@@ -413,7 +426,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
         long st = 0;
         if (tmp.containsKey(DB.ACTIVITY.START_TIME)) {
             st = tmp.getAsLong(DB.ACTIVITY.START_TIME);
-            setTitle("RunnerUp - " + formatter.formatDateTime(Formatter.TXT_LONG, st));
+            toolbar.setTitle("RunnerUp - " + formatter.formatDateTime(Formatter.TXT_LONG, st));
         }
         float d = 0;
         if (tmp.containsKey(DB.ACTIVITY.DISTANCE)) {
@@ -465,7 +478,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            LayoutInflater inflater = LayoutInflater.from(DetailActivity.this);
+            LayoutInflater inflater = LayoutInflater.from(getActivity());
             View view = inflater.inflate(R.layout.laplist_row, parent, false);
             TextView tv0 = (TextView) view.findViewById(R.id.lap_list_type);
             int i = laps[position].getAsInteger(DB.LAP.INTENSITY);
@@ -544,16 +557,16 @@ public class DetailActivity extends FragmentActivity implements Constants {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (position == reports.size()) {
-                Button b = new Button(DetailActivity.this);
+                Button b = new Button(getActivity());
                 b.setText(getString(R.string.Configure_accounts));
                 b.setBackgroundResource(R.drawable.btn_blue);
                 b.setTextColor(getResources().getColorStateList(R.color.btn_text_color));
                 b.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent i = new Intent(DetailActivity.this,
+                        Intent i = new Intent(getActivity(),
                                 AccountListActivity.class);
-                        DetailActivity.this.startActivityForResult(i,
+                        DetailFragment.this.startActivityForResult(i,
                                 SyncManager.CONFIGURE_REQUEST + 1);
                     }
                 });
@@ -563,7 +576,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
             ContentValues tmp = reports.get(position);
             String name = tmp.getAsString("name");
 
-            LayoutInflater inflater = LayoutInflater.from(DetailActivity.this);
+            LayoutInflater inflater = LayoutInflater.from(getActivity());
             View view = inflater.inflate(R.layout.reportlist_row, parent, false);
 
             TextView tv0 = (TextView) view.findViewById(R.id.account_id);
@@ -609,7 +622,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
         @Override
         public boolean onLongClick(View arg0) {
             final String name = (String) arg0.getTag();
-            AlertDialog.Builder builder = new AlertDialog.Builder(DetailActivity.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle("Clear upload for " + name);
             builder.setMessage(getString(R.string.Are_you_sure));
             builder.setPositiveButton(getString(R.string.Yes),
@@ -647,8 +660,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
                 @Override
                 public void run(String synchronizerName, Synchronizer.Status status) {
                     uploading = false;
-                    DetailActivity.this.setResult(RESULT_OK);
-                    DetailActivity.this.finish();
+                    // TODO: notify activity and pop fragment
                 }
             }, pendingSynchronizers, mID);
         }
@@ -656,15 +668,14 @@ public class DetailActivity extends FragmentActivity implements Constants {
 
     final OnClickListener discardButtonClick = new OnClickListener() {
         public void onClick(View v) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(DetailActivity.this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(getString(R.string.Discard_activity));
             builder.setMessage(getString(R.string.Are_you_sure));
             builder.setPositiveButton(getString(R.string.Yes),
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
-                            DetailActivity.this.setResult(RESULT_CANCELED);
-                            DetailActivity.this.finish();
+                            // TODO: notify activity and pop fragment
                         }
                     });
             builder.setNegativeButton(getString(R.string.No),
@@ -679,25 +690,26 @@ public class DetailActivity extends FragmentActivity implements Constants {
         }
     };
 
-    @Override
-    public void onBackPressed() {
-        if (uploading == true) {
-            /**
-             * Ignore while uploading
-             */
-            return;
-        }
-        if (mode == MODE_SAVE) {
-            resumeButtonClick.onClick(resumeButton);
-        } else {
-            super.onBackPressed();
-        }
-    }
+
+    //TODO: move to activity:
+//    @Override
+//    public void onBackPressed() {
+//        if (uploading == true) {
+//            /**
+//             * Ignore while uploading
+//             */
+//            return;
+//        }
+//        if (mode == MODE_SAVE) {
+//            resumeButtonClick.onClick(resumeButton);
+//        } else {
+//            super.onBackPressed();
+//        }
+//    }
 
     final OnClickListener resumeButtonClick = new OnClickListener() {
         public void onClick(View v) {
-            DetailActivity.this.setResult(RESULT_FIRST_USER);
-            DetailActivity.this.finish();
+            // TODO: notify activity with result first user and pop fragment
         }
     };
 
@@ -739,32 +751,28 @@ public class DetailActivity extends FragmentActivity implements Constants {
         }
     };
 
-    final OnClickListener deleteButtonClick = new OnClickListener() {
-        public void onClick(View v) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(
-                    DetailActivity.this);
-            builder.setTitle(getString(R.string.Delete_activity));
-            builder.setMessage(getString(R.string.Are_you_sure));
-            builder.setPositiveButton(getString(R.string.Yes),
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            DBHelper.deleteActivity(mDB, mID);
-                            dialog.dismiss();
-                            DetailActivity.this.setResult(RESULT_OK);
-                            DetailActivity.this.finish();
-                        }
-                    });
-            builder.setNegativeButton(getString(R.string.No),
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            // Do nothing but close the dialog
-                            dialog.dismiss();
-                        }
+    private void showDeleteDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(getString(R.string.Delete_activity));
+        builder.setMessage(getString(R.string.Are_you_sure));
+        builder.setPositiveButton(getString(R.string.Yes),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        DBHelper.deleteActivity(mDB, mID);
+                        dialog.dismiss();
+                        ((MainLayout) getActivity()).navigateUp();
+                    }
+                });
+        builder.setNegativeButton(getString(R.string.No),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing but close the dialog
+                        dialog.dismiss();
+                    }
 
-                    });
-            builder.show();
-        }
-    };
+                });
+        builder.show();
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -830,7 +838,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
             this.hr = new int[graphAverageSeconds];
 
             Resources res = getResources();
-            Context ctx = getApplicationContext();
+            Context ctx = getActivity().getApplicationContext();
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
             this.hrCalc = new HRZones(res, prefs);
             if (hrCalc.isConfigured()) {
@@ -1058,13 +1066,13 @@ public class DetailActivity extends FragmentActivity implements Constants {
             avg_pace /= paceList.size();
             Log.e(getClass().getName(), "graph: " + paceList.size() + " points");
 
-            boolean smoothData = PreferenceManager.getDefaultSharedPreferences(DetailActivity.this)
+            boolean smoothData = PreferenceManager.getDefaultSharedPreferences(getActivity())
                     .getBoolean(getResources().getString(R.string.pref_pace_graph_smoothing), true);
             if (paceList.size() > 0 && smoothData) {
                 GraphFilter f = new GraphFilter(paceList);
                 final String defaultFilterList = "mm(31);kz(5,13);sg(5)";
                 final String filterList = PreferenceManager.getDefaultSharedPreferences(
-                        DetailActivity.this).getString(
+                        getActivity()).getString(
                         getResources().getString(R.string.pref_pace_graph_smoothing_filters),
                         defaultFilterList);
                 final String filters[] = filterList.split(";");
@@ -1250,7 +1258,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
                                         break;
                                 }
                                 m = new Marker(title, null, point);
-                                m.setIcon(new Icon(getApplicationContext(), Icon.Size.MEDIUM, null, String.format("#%06X", 0xFFFFFF & color)));
+                                m.setIcon(new Icon(getActivity().getApplicationContext(), Icon.Size.MEDIUM, null, String.format("#%06X", 0xFFFFFF & color)));
                                 route.markers.add(m);
                                 break;
                             case DB.LOCATION.TYPE_GPS:
@@ -1279,7 +1287,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
                                     cnt_distance++;
                                     acc_distance = 0;
                                     m = new Marker("" + cnt_distance + " " + formatter.getUnitString(), getString(R.string.Distance_marker), point);
-                                    m.setIcon(new Icon(getApplicationContext(), Icon.Size.MEDIUM, null, String.format("#%06X", 0xFFFFFF & Color.YELLOW)));
+                                    m.setIcon(new Icon(getActivity().getApplicationContext(), Icon.Size.MEDIUM, null, String.format("#%06X", 0xFFFFFF & Color.YELLOW)));
                                     route.markers.add(m);
                                 }
                                 lastLocation = point;
@@ -1371,7 +1379,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
         final CharSequence items[] = {
                 "gpx", "tcx" /* "nike+xml" */
         };
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(getString(R.string.Share_activity));
         builder.setPositiveButton(getString(R.string.OK),
                 new DialogInterface.OnClickListener() {
@@ -1381,7 +1389,7 @@ public class DetailActivity extends FragmentActivity implements Constants {
                             return;
                         }
 
-                        final Activity context = DetailActivity.this;
+                        final Activity context = getActivity();
                         final CharSequence fmt = items[which[0]];
                         final Intent intent = new Intent(Intent.ACTION_SEND);
 
